@@ -26,6 +26,7 @@ from homeassistant.components.assist_pipeline.pipeline import (
     PipelineEventType,
     PipelineStorageCollection,
     PipelineStore,
+    PipelineUpdate,
     _async_local_fallback_intent_filter,
     async_create_default_pipeline,
     async_get_pipeline,
@@ -572,9 +573,8 @@ async def test_update_pipeline(
     ]
 
     pipeline = pipelines[0]
-    await async_update_pipeline(
-        hass,
-        pipeline,
+
+    updates = PipelineUpdate(
         conversation_engine="homeassistant_1",
         conversation_language="de",
         language="de",
@@ -587,6 +587,7 @@ async def test_update_pipeline(
         wake_word_entity="wake_work.test_1",
         wake_word_id="wake_word_id_1",
     )
+    await async_update_pipeline(hass, pipeline, updates)
 
     pipelines = async_get_pipelines(hass)
     pipelines = list(pipelines)
@@ -624,14 +625,13 @@ async def test_update_pipeline(
         "prefer_local_intents": False,
     }
 
-    await async_update_pipeline(
-        hass,
-        pipeline,
+    updates = PipelineUpdate(
         stt_engine="stt.test_2",
         stt_language="en",
         tts_engine="test_2",
         tts_language="en",
     )
+    await async_update_pipeline(hass, pipeline, updates)
 
     pipelines = async_get_pipelines(hass)
     pipelines = list(pipelines)
@@ -1110,9 +1110,11 @@ async def test_prefer_local_intents(
     pipeline_store = pipeline_data.pipeline_store
     pipeline_id = pipeline_store.async_get_preferred_item()
     pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
-    await assist_pipeline.pipeline.async_update_pipeline(
-        hass, pipeline, conversation_engine="test-agent", prefer_local_intents=True
+    updates = PipelineUpdate(
+        conversation_engine="test-agent",
+        prefer_local_intents=True,
     )
+    await assist_pipeline.pipeline.async_update_pipeline(hass, pipeline, updates)
     pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
@@ -1179,9 +1181,10 @@ async def test_intent_continue_conversation(
     pipeline_store = pipeline_data.pipeline_store
     pipeline_id = pipeline_store.async_get_preferred_item()
     pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
-    await assist_pipeline.pipeline.async_update_pipeline(
-        hass, pipeline, conversation_engine="test-agent"
+    updates = PipelineUpdate(
+        conversation_engine="test-agent",
     )
+    await assist_pipeline.pipeline.async_update_pipeline(hass, pipeline, updates)
     pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
@@ -1235,9 +1238,11 @@ async def test_intent_continue_conversation(
     assert results[1]["intent_output"]["continue_conversation"] is True
 
     # Change conversation agent to default one and register sentence trigger that should not be called
-    await assist_pipeline.pipeline.async_update_pipeline(
-        hass, pipeline, conversation_engine=None
+    updates = PipelineUpdate(
+        conversation_engine=None,
     )
+
+    await assist_pipeline.pipeline.async_update_pipeline(hass, pipeline, updates)
     pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
     assert await async_setup_component(
         hass,
@@ -1650,9 +1655,10 @@ async def test_chat_log_tts_streaming(
     pipeline_store = pipeline_data.pipeline_store
     pipeline_id = pipeline_store.async_get_preferred_item()
     pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
-    await assist_pipeline.pipeline.async_update_pipeline(
-        hass, pipeline, conversation_engine="test-agent"
+    updates = PipelineUpdate(
+        conversation_engine="test-agent",
     )
+    await assist_pipeline.pipeline.async_update_pipeline(hass, pipeline, updates)
     pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
